@@ -1,0 +1,5 @@
+chromadb
+numpy
+sentence-transformers
+nltk
+certifi
