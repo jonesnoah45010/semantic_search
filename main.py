@@ -42,19 +42,18 @@ class SemanticQuery:
             ids=ids
         )
 
+
     def query_files(self, query_text, num_results=3):
-        # finds which files are relevent to your query
+        # finds which files are relevant to your query
         results = self.collection.query(
             query_texts=[query_text],
             n_results=num_results
         )
-        results["matches"] = results["metadatas"][0]
-        new_matches = []
-        for item in results["matches"]:
-            new_matches.append(item["source"])
-        results["matches"] = new_matches
-        results["file_contents"] = results["documents"][0]
-        return results
+        matches = results["metadatas"][0]
+        scores = results["distances"][0]
+        result_list = [{"file_name": match["source"], "score": 1/score} for match, score in zip(matches, scores)]
+        result_list = sorted(result_list, key=lambda x: x["score"])[::-1]
+        return result_list
 
     def query_single_file(self, file_path, query_text, num_results=3, sentence_chunking=5):
         file_path = os.path.join(self.directory_path, file_path)
@@ -77,31 +76,34 @@ if __name__ == "__main__":
     print("\n\n\n\n\n\n\n\n\n\n\n\n")
 
     q = "whales and the sea"
-    results = searcher.query_files(q, 1)
+    results = searcher.query_files(q, 3)
 
     print(q)
     print("...")
-    print(results["matches"])
+    for res in results:
+        print(res)
     print("...")
 
     print("\n\n\n\n")
 
     q2 = "reanimating corpses"
-    results2 = searcher.query_files(q2, 1)
+    results2 = searcher.query_files(q2, 3)
 
     print(q2)
     print("...")
-    print(results2["matches"])
+    for res in results2:
+        print(res)
     print("...")
 
     print("\n\n\n\n")
 
     q3 = "a girl getting lost down a rabbit hole"
-    results3 = searcher.query_files(q3, 1)
+    results3 = searcher.query_files(q3, 3)
 
     print(q3)
     print("...")
-    print(results3["matches"])
+    for res in results3:
+        print(res)
     print("...")
 
     print("\n\n\n\n")
@@ -109,10 +111,10 @@ if __name__ == "__main__":
 
 
     file_path = "alice_in_wonderland.txt"
-    q4 = 'the mad hatter'
-    single_file_results = searcher.query_single_file(file_path, q4, num_results=3)
+    q4 = 'the mad hatter being crazy'
+    single_file_results = searcher.query_single_file(file_path, q4, num_results=3, sentence_chunking = 10)
 
-    print("Single file query results: \n")
+    print("SINGLE FILE QUERY RESULTS: \n")
     for sentence, similarity in single_file_results:
         print(f"Sentences: {sentence}")
         print(f"Similarity: {similarity}")
